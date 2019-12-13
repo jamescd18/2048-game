@@ -123,8 +123,76 @@
 ; ------------------------------- Key Functions -------------------------------
 
 ; key : KeyEvent tGame -> tGame
-(define (key keyEvent tG)
+(define (key tG keyEvent)
   tG)
+
+; move-right : tGame -> tGame
+; Move all tiles right if possible
+(define (move-right tG)
+  (map move-row-right tG))
+
+(check-expect (move-right tGame1)
+              '((na na na 4 4)
+                (na na na 2 4)
+                (na na na 8 8)
+                (na na na 2 4)
+                (na na na 16 8)))
+(check-expect (move-right '((na na na 4 4)
+                            (na 2 na na 4)
+                            (8 8 na na na)
+                            (na na na 2 4)
+                            (16 na na 8 na)))
+              '((na na na 4 4)
+                (na na na 2 4)
+                (na na na 8 8)
+                (na na na 2 4)
+                (na na na 16 8)))
+
+; move-row-right : [List-of Tile] -> [List-of Tile]
+; Slide tiles all the way to the right as is possible
+(define (move-row-right row)
+  (sort row (λ (tile1 tile2) (symbol? tile1))))
+
+(check-expect (move-row-right empty) empty)
+(check-expect (move-row-right '(na na na 4 4)) '(na na na 4 4))
+(check-expect (move-row-right '(na 4 na 8 na)) '(na na na 4 8))
+(check-expect (move-row-right '(16 na na na na)) '(na na na na 16))
+(check-expect (move-row-right '(na na 8 4 na)) '(na na na 8 4))
+
+; move-left : tGame -> tGame
+; Move all tiles left if possible
+(define (move-left tG)
+  (map move-row-left tG))
+
+(check-expect (move-left tGame1)
+              '((4 4 na na na)
+                (2 4 na na na)
+                (8 8 na na na)
+                (2 4 na na na)
+                (16 8 na na na)))
+(check-expect (move-left '((na na na 4 4)
+                            (na 2 na na 4)
+                            (8 8 na na na)
+                            (na na na 2 4)
+                            (16 na na 8 na)))
+              '((4 4 na na na)
+                (2 4 na na na)
+                (8 8 na na na)
+                (2 4 na na na)
+                (16 8 na na na)))
+
+; move-row-left : [List-of Tile] -> [List-of Tile]
+; Slide tiles all the way to the left as is possible
+(define (move-row-left row)
+  (sort row (λ (tile1 tile2) (symbol? tile2))))
+
+(check-expect (move-row-left empty) empty)
+(check-expect (move-row-left '(na na na 4 4)) '(4 4 na na na))
+(check-expect (move-row-left '(na 4 na 8 na)) '(4 8 na na na))
+(check-expect (move-row-left '(16 na na na na)) '(16 na na na na))
+(check-expect (move-row-left '(na na na na 16)) '(16 na na na na))
+(check-expect (move-row-left '(na na 8 4 na)) '(8 4 na na na))
+
 
 ; ------------------------------ Other Functions ------------------------------
 
