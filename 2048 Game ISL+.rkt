@@ -21,6 +21,11 @@
                  (na na na 8 8)
                  (na na 2 na 4)
                  (na na na 16 8)))
+(define tGame2 '((4 na na 4 4)
+                 (na 16 na 16 4)
+                 (na na na 16 8)
+                 (32 na 2 na 4)
+                 (32 na na 16 8)))
 
 ; Constants
 (define BG-COLOR "darkgrey")
@@ -71,6 +76,15 @@
                                         (draw-single-tile 2) BLANK-TILE (draw-single-tile 4)
                                         BLANK-TILE BLANK-TILE BLANK-TILE (draw-single-tile 16)
                                         (draw-single-tile 8)))
+(check-expect (draw-tiles tGame2) (list (draw-single-tile 4) BLANK-TILE BLANK-TILE
+                                        (draw-single-tile 4) (draw-single-tile 4) BLANK-TILE
+                                        (draw-single-tile 16) BLANK-TILE (draw-single-tile 16)
+                                        (draw-single-tile 4) BLANK-TILE BLANK-TILE BLANK-TILE
+                                        (draw-single-tile 16) (draw-single-tile 8)
+                                        (draw-single-tile 32) BLANK-TILE (draw-single-tile 2)
+                                        BLANK-TILE (draw-single-tile 4) (draw-single-tile 32)
+                                        BLANK-TILE BLANK-TILE (draw-single-tile 16)
+                                        (draw-single-tile 8)))
 
 ; draw-single-tile : Tile -> Image
 ; Draws the given tile
@@ -112,10 +126,67 @@
 (define (key keyEvent tG)
   tG)
 
-; ----------------------------------- MAIN ------------------------------------
+; ------------------------------ Other Functions ------------------------------
 
+; game-over? : tGame -> Boolean
+; Is the game at either a win state or a loose state?
+(define (game-over? tG)
+  (or (win? tG) (loose? tG)))
+
+(check-expect (game-over? tGame1) #f)
+(check-expect (game-over? tGame2) #f)
+
+; win? : tGame -> Boolean
+; Does the board contain at least one 2048 tile?
+(define (win? tG)
+  (ormap (λ (row)
+           (ormap (λ (tile) (and (number? tile) (= tile 2048)))
+                  row))
+         tG))
+
+(check-expect (win? tGame1) #f)
+(check-expect (win? tGame2) #f)
+(check-expect (win? '((4 na na 4 4)
+                      (na 16 na 16 4)
+                      (na na 2048 16 8)
+                      (32 na 2 na 4)
+                      (32 na na 16 8)))
+              #t)
+
+; loose? : tGame -> Boolean
+; Are the following conditions satisfied?
+; - There are no empty spaces
+; - No key press operation will change the tGame
+; - None of the tiles are 2048
+(define (loose? tG)
+  (and (not (win? tG))
+       (number? 'a)))
+
+; no-empty-spaces? : tGame -> Boolean
+
+; tGame=? : tGame tGame -> Boolean
+; Are the given tGames identical?
+(define (tGame=? tG1 tG2)
+  (andmap (λ (row1 row2)
+            (andmap (λ (tile1 tile2) (or (and (symbol? tile1) (symbol? tile2))
+                                         (and (number? tile1) (number? tile2) (= tile1 tile2))))
+                    row1
+                    row2))
+          tG1
+          tG2))
+
+(check-expect (tGame=? empty empty) #t)
+(check-expect (tGame=? tGame1 tGame1) #t)
+(check-expect (tGame=? tGame2 tGame2) #t)
+(check-expect (tGame=? tGame1 tGame2) #f)
+(check-expect (tGame=? tGame2 tGame1) #f)
+          
+
+; ----------------------------------- MAIN ------------------------------------
+ 
 ; main : tGame -> tGame
 (define (main starter-board)
   (big-bang starter-board
     [to-draw draw]
-    [on-key key]))
+    [on-key key]
+    [stop-when game-over?]))
