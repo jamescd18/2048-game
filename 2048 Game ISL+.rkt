@@ -187,10 +187,10 @@
                 (2 4 na na na)
                 (16 8 na na na)))
 (check-expect (move-left '((na na na 4 4)
-                            (na 2 na na 4)
-                            (8 8 na na na)
-                            (na na na 2 4)
-                            (16 na na 8 na)))
+                           (na 2 na na 4)
+                           (8 8 na na na)
+                           (na na na 2 4)
+                           (16 na na 8 na)))
               '((4 4 na na na)
                 (2 4 na na na)
                 (8 8 na na na)
@@ -229,7 +229,7 @@
                               (= (first row) (second row)))
                          (cons 'na (combo-row-right (cons (+ (first row) (second row))
                                                           (rest (rest row)))))
-                     (cons (first row) (combo-row-right (rest row))))]))
+                         (cons (first row) (combo-row-right (rest row))))]))
 
 #;(check-expect (combo-row-right ...) ...)
 
@@ -253,10 +253,64 @@
                               (= (first row) (second row)))
                          (combo-row-left (cons (+ (first row) (second row))
                                                (append (rest (rest row)) '(na))))
-                     (cons (first row) (combo-row-left (rest row))))]))
+                         (cons (first row) (combo-row-left (rest row))))]))
 
 #;(check-expect (combo-row-left ...) ...)
 
+; push-down-board : tGame -> tGame
+; Pushes tiles all the way down as is possible
+(define (push-down-board tG)
+  
+  (cond [(or (empty? tG) (empty? (rest tG))) tG]
+        [(cons? tG) (cons (push-row-down-top (first tG) (second tG))
+                          (push-down-board (cons (push-row-down-bot (first tG) (second tG))
+                                                 (rest (rest tG)))))]))
+
+(check-expect (push-down-board '((na na na 8 na)
+                                 (na na na 2 4)
+                                 (na na na 16 na)
+                                 (na na 2 na 4)
+                                 (na na na 16 8)))
+              '((na na na na na)
+                (na na na na na)
+                (na na na 8 na)
+                (na na na 2 na)
+                (na na 2 32 16)))
+
+; push-row-down-top : [List-of Tile] [List-of Tile] -> [List-of Tile]
+; Return the result of the top row after having pushed values into the bottom row
+(define (push-row-down-top top bot)
+  (map (λ (tile-top tile-bot)
+         (cond [(symbol? tile-bot) tile-bot]
+               [(symbol? tile-top) tile-top]
+               [(and (number? tile-top) (number? tile-bot) (= tile-top tile-bot)) 'na]
+               [(and (number? tile-top) (number? tile-bot)) tile-top]))
+       top
+       bot))
+
+(check-expect (push-row-down-top '(na na na na na) '(na na na na na)) '(na na na na na))
+(check-expect (push-row-down-top '(na na na na na) '(na na na 4 na)) '(na na na na na))
+(check-expect (push-row-down-top '(na na na na 4) '(na na na na na)) '(na na na na na))
+(check-expect (push-row-down-top '(na na na na 4) '(na na na na 4)) '(na na na na na))
+(check-expect (push-row-down-top '(na na na na 8) '(na na na na 4)) '(na na na na 8))
+
+; push-row-down-bot : [List-of Tile] [List-of Tile] -> [List-of Tile]
+; Return the result of the bottom row after having pushed values into the bottom row
+(define (push-row-down-bot top bot)
+  (map (λ (tile-top tile-bot)
+         (cond [(symbol? tile-top) tile-bot]
+               [(and (symbol? tile-bot) (number? tile-top)) tile-top]
+               [(and (number? tile-top) (number? tile-bot) (= tile-top tile-bot))
+                (+ tile-top tile-bot)]
+               [(and (number? tile-top) (number? tile-bot)) tile-bot]))
+       top
+       bot))
+
+(check-expect (push-row-down-bot '(na na na na na) '(na na na na na)) '(na na na na na))
+(check-expect (push-row-down-bot '(na na na na na) '(na na na 4 na)) '(na na na 4 na))
+(check-expect (push-row-down-bot '(na na na na 4) '(na na na na na)) '(na na na na 4))
+(check-expect (push-row-down-bot '(na na na na 4) '(na na na na 4)) '(na na na na 8))
+(check-expect (push-row-down-bot '(na na na na 4) '(na na na na 8)) '(na na na na 8))
 
 
 ; ------------------------------ Other Functions ------------------------------
