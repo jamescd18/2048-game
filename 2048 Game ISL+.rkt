@@ -124,7 +124,23 @@
 
 ; key : KeyEvent tGame -> tGame
 (define (key tG keyEvent)
-  tG)
+  (cond [(key=? keyEvent "right") (combo-right (move-right tG))]
+        [(key=? keyEvent "left") (combo-left (move-left tG))]
+        [else tG]))
+
+(check-expect (key tGame1 "l") tGame1)
+(check-expect (key tGame1 "right")
+              '((na na na na 8)
+                (na na na 2 4)
+                (na na na na 16)
+                (na na na 2 4)
+                (na na na 16 8)))
+(check-expect (key tGame1 "left")
+              '((8 na na na na)
+                (2 4 na na na)
+                (16 na na na na)
+                (2 4 na na na)
+                (16 8 na na na)))
 
 ; move-right : tGame -> tGame
 ; Move all tiles right if possible
@@ -192,6 +208,55 @@
 (check-expect (move-row-left '(16 na na na na)) '(16 na na na na))
 (check-expect (move-row-left '(na na na na 16)) '(16 na na na na))
 (check-expect (move-row-left '(na na 8 4 na)) '(8 4 na na na))
+
+; combo-right : tGame -> tGame
+; Combine values next to each other that are the same going right
+(define (combo-right tG)
+  (map combo-row-right tG))
+
+(check-expect (combo-right tGame1)
+              '((na na na na 8)
+                (na na na 2 4)
+                (na na na na 16)
+                (na na 2 na 4)
+                (na na na 16 8)))
+
+; combo-row-right : [List-of Tile] -> [List-of Tile]
+; Combine values next to each other that are the same going right
+(define (combo-row-right row)
+  (cond [(or (empty? row) (empty? (rest row))) row]
+        [(cons? row) (if (and (number? (first row)) (number? (second row))
+                              (= (first row) (second row)))
+                         (cons 'na (combo-row-right (cons (+ (first row) (second row))
+                                                          (rest (rest row)))))
+                     (cons (first row) (combo-row-right (rest row))))]))
+
+#;(check-expect (combo-row-right ...) ...)
+
+; combo-left : tGame -> tGame
+; Combine values next to each other that are the same going left
+(define (combo-left tG)
+  (map combo-row-left tG))
+
+(check-expect (combo-left tGame1)
+              '((na na na 8 na)
+                (na na na 2 4)
+                (na na na 16 na)
+                (na na 2 na 4)
+                (na na na 16 8)))
+
+; combo-row-left : [List-of Tile] -> [List-of Tile]
+; Combine values next to each other that are the same going left
+(define (combo-row-left row)
+  (cond [(or (empty? row) (empty? (rest row))) row]
+        [(cons? row) (if (and (number? (first row)) (number? (second row))
+                              (= (first row) (second row)))
+                         (combo-row-left (cons (+ (first row) (second row))
+                                               (append (rest (rest row)) '(na))))
+                     (cons (first row) (combo-row-left (rest row))))]))
+
+#;(check-expect (combo-row-left ...) ...)
+
 
 
 ; ------------------------------ Other Functions ------------------------------
