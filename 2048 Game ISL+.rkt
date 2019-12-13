@@ -4,6 +4,7 @@
 
 
 ; 2048 Game?
+; James Chang-Davidson
 
 (require 2htdp/universe)
 (require 2htdp/image)
@@ -37,7 +38,6 @@
                           (p -5 -155) (p -55 -155) (p -105 -155) (p -155 -155) (p -205 -155)
                           (p -5 -205) (p -55 -205) (p -105 -205) (p -155 -205) (p -205 -205)))
 
-
 ;(build-list 5 (λ (n) (build-list 5 identity)))
 #;(list (list 0 1 2 3 4)
         (list 0 1 2 3 4)
@@ -45,7 +45,7 @@
         (list 0 1 2 3 4)
         (list 0 1 2 3 4))
 
-
+; ------------------------------- Draw Functions -------------------------------
 
 ; draw : tGame -> Image
 ; Draws the current game state board
@@ -106,10 +106,16 @@
                                                      (square TILE-SIZE "solid" TILE-COLOR)))
 
 
+; ------------------------------- Key Functions -------------------------------
 
+; key : KeyEvent tGame -> tGame
+(define (key keyEvent tG)
+  tG)
+
+; ----------------------------------- MAIN ------------------------------------
 
 ; main : tGame -> tGame
 (define (main starter-board)
   (big-bang starter-board
     [to-draw draw]
-    [on-key ...]))
+    [on-key key]))
