@@ -126,6 +126,7 @@
 (define (key tG keyEvent)
   (cond [(key=? keyEvent "right") (combo-right (move-right tG))]
         [(key=? keyEvent "left") (combo-left (move-left tG))]
+        [(key=? keyEvent "down") (push-down-board tG)]
         [else tG]))
 
 (check-expect (key tGame1 "l") tGame1)
@@ -260,11 +261,9 @@
 ; push-down-board : tGame -> tGame
 ; Pushes tiles all the way down as is possible
 (define (push-down-board tG)
-  
-  (cond [(or (empty? tG) (empty? (rest tG))) tG]
-        [(cons? tG) (cons (push-row-down-top (first tG) (second tG))
-                          (push-down-board (cons (push-row-down-bot (first tG) (second tG))
-                                                 (rest (rest tG)))))]))
+  (if (tGame=? tG (push-down-board/one tG))
+      tG
+      (push-down-board (push-down-board/one tG))))
 
 (check-expect (push-down-board '((na na na 8 na)
                                  (na na na 2 4)
@@ -276,6 +275,25 @@
                 (na na na 8 na)
                 (na na na 2 na)
                 (na na 2 32 16)))
+
+; push-down-board/one : tGame -> tGame
+; Pushes tiles down as is possible one pass down
+(define (push-down-board/one tG)
+  (cond [(or (empty? tG) (empty? (rest tG))) tG]
+        [(cons? tG) (cons (push-row-down-top (first tG) (second tG))
+                          (push-down-board/one (cons (push-row-down-bot (first tG) (second tG))
+                                                     (rest (rest tG)))))]))
+
+(check-expect (push-down-board/one '((na na na 8 na)
+                                     (na na na 2 4)
+                                     (na na na 16 na)
+                                     (na na 2 na 4)
+                                     (na na na 16 8)))
+              (list (list 'na 'na 'na 8 'na)
+                    (list 'na 'na 'na 2 'na)
+                    (list 'na 'na 'na 'na 'na)
+                    (list 'na 'na 'na 'na 'na)
+                    (list 'na 'na 2 32 16)))
 
 ; push-row-down-top : [List-of Tile] [List-of Tile] -> [List-of Tile]
 ; Return the result of the top row after having pushed values into the bottom row
