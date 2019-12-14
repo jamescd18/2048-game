@@ -331,6 +331,83 @@
 (check-expect (push-row-down-bot '(na na na na 4) '(na na na na 8)) '(na na na na 8))
 
 
+
+;#|
+
+; push-up-board : tGame -> tGame
+; Pushes tiles all the way up as is possible
+(define (push-up-board tG)
+  (if (tGame=? tG (push-up-board/one tG))
+      tG
+      (push-up-board (push-up-board/one tG))))
+
+(check-expect (push-down-board '((na na na 8 na)
+                                 (na na na 2 4)
+                                 (na na na 16 na)
+                                 (na na 2 na 4)
+                                 (na na na 16 8)))
+              '((na na 2 8 16)
+                (na na na 2 na)
+                (na na na 32 na)
+                (na na na na na)
+                (na na na na na)))
+
+; push-up-board/one : tGame -> tGame
+; Pushes tiles up as is possible one pass up
+(define (push-up-board/one tG)
+  (cond [(or (empty? tG) (empty? (rest tG))) tG]
+        [(cons? tG) (cons (push-row-up-top (first tG) (second tG))
+                          (push-up-board/one (cons (push-row-up-bot (first tG) (second tG))
+                                                     (rest (rest tG)))))]))
+
+#;(check-expect (push-up-board/one '((na na na 8 na)
+                                     (na na na 2 4)
+                                     (na na na 16 na)
+                                     (na na 2 na 4)
+                                     (na na na 16 8)))
+              (list (list 'na 'na 'na 8 'na)
+                    (list 'na 'na 'na 2 'na)
+                    (list 'na 'na 'na 'na 'na)
+                    (list 'na 'na 'na 'na 'na)
+                    (list 'na 'na 2 32 16)))
+
+; push-row-up-top : [List-of Tile] [List-of Tile] -> [List-of Tile]
+; Return the result of the top row after having pushed values into the top row
+(define (push-row-up-top top bot)
+  (map (λ (tile-top tile-bot)
+         (cond [(symbol? tile-bot) tile-top]
+               [(symbol? tile-top) tile-bot]
+               [(and (number? tile-top) (number? tile-bot) (= tile-top tile-bot)) 'na]
+               [(and (number? tile-top) (number? tile-bot)) tile-top]))
+       top
+       bot))
+
+(check-expect (push-row-up-top '(na na na na na) '(na na na na na)) '(na na na na na))
+(check-expect (push-row-up-top '(na na na na na) '(na na na 4 na)) '(na na na 4 na))
+(check-expect (push-row-up-top '(na na na na 4) '(na na na na na)) '(na na na na 4))
+(check-expect (push-row-up-top '(na na na na 4) '(na na na na 4)) '(na na na na 8))
+(check-expect (push-row-up-top '(na na na na 8) '(na na na na 4)) '(na na na na 8))
+
+; push-row-up-bot : [List-of Tile] [List-of Tile] -> [List-of Tile]
+; Return the result of the bottom row after having pushed values into the top row
+(define (push-row-up-bot top bot)
+  (map (λ (tile-top tile-bot)
+         (cond [(symbol? tile-top) tile-bot]
+               [(and (symbol? tile-bot) (number? tile-top)) tile-top]
+               [(and (number? tile-top) (number? tile-bot) (= tile-top tile-bot))
+                (+ tile-top tile-bot)]
+               [(and (number? tile-top) (number? tile-bot)) tile-bot]))
+       top
+       bot))
+
+(check-expect (push-row-up-bot '(na na na na na) '(na na na na na)) '(na na na na na))
+(check-expect (push-row-up-bot '(na na na na na) '(na na na 4 na)) '(na na na na na))
+(check-expect (push-row-up-bot '(na na na na 4) '(na na na na na)) '(na na na na na))
+(check-expect (push-row-up-bot '(na na na na 4) '(na na na na 4)) '(na na na na na))
+(check-expect (push-row-up-bot '(na na na na 4) '(na na na na 8)) '(na na na na 8))
+
+;|#
+
 ; ------------------------------ Other Functions ------------------------------
 
 ; game-over? : tGame -> Boolean
