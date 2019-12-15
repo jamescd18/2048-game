@@ -127,6 +127,7 @@
   (cond [(key=? keyEvent "right") (combo-right (move-right tG))]
         [(key=? keyEvent "left") (combo-left (move-left tG))]
         [(key=? keyEvent "down") (push-down-board tG)]
+        [(key=? keyEvent "up") (push-up-board tG)]
         [else tG]))
 
 (check-expect (key tGame1 "l") tGame1)
@@ -142,6 +143,18 @@
                 (16 na na na na)
                 (2 4 na na na)
                 (16 8 na na na)))
+(check-expect (key tGame1 "down")
+              '((na na na na na)
+                (na na na 4 na)
+                (na na na 2 16)
+                (na na na 8 4)
+                (na na 2 16 8)))
+(check-expect (key tGame1 "up")
+              '((na na 2 4 16)
+                (na na na 2 4)
+                (na na na 8 8)
+                (na na na 16 na)
+                (na na na na na)))
 
 ; move-right : tGame -> tGame
 ; Move all tiles right if possible
@@ -221,6 +234,12 @@
                 (na na na na 16)
                 (na na 2 na 4)
                 (na na na 16 8)))
+(check-expect (combo-right tGame2)
+              '((4 na na na 8)
+                 (na 16 na 16 4)
+                 (na na na 16 8)
+                 (32 na 2 na 4)
+                 (32 na na 16 8)))
 
 ; combo-row-right : [List-of Tile] -> [List-of Tile]
 ; Combine values next to each other that are the same going right
@@ -232,7 +251,12 @@
                                                           (rest (rest row)))))
                          (cons (first row) (combo-row-right (rest row))))]))
 
-#;(check-expect (combo-row-right ...) ...)
+(check-expect (combo-row-right '(na na na na na)) '(na na na na na))
+(check-expect (combo-row-right '(8 na na na 16)) '(8 na na na 16))
+(check-expect (combo-row-right '(na na na 4 4)) '(na na na na 8))
+(check-expect (combo-row-right '(2 2 na 16 16)) '(na 4 na na 32))
+(check-expect (combo-row-right '(na na 16 16 16)) '(na na na 32 16))
+(check-expect (combo-row-right '(na 16 16 16 16)) '(na na 32 na 32))
 
 ; combo-left : tGame -> tGame
 ; Combine values next to each other that are the same going left
@@ -330,10 +354,6 @@
 (check-expect (push-row-down-bot '(na na na na 4) '(na na na na 4)) '(na na na na 8))
 (check-expect (push-row-down-bot '(na na na na 4) '(na na na na 8)) '(na na na na 8))
 
-
-
-;#|
-
 ; push-up-board : tGame -> tGame
 ; Pushes tiles all the way up as is possible
 (define (push-up-board tG)
@@ -341,11 +361,11 @@
       tG
       (push-up-board (push-up-board/one tG))))
 
-(check-expect (push-down-board '((na na na 8 na)
-                                 (na na na 2 4)
-                                 (na na na 16 na)
-                                 (na na 2 na 4)
-                                 (na na na 16 8)))
+(check-expect (push-up-board '((na na na 8 na)
+                               (na na na 2 4)
+                               (na na na 16 na)
+                               (na na 2 na 4)
+                               (na na na 16 8)))
               '((na na 2 8 16)
                 (na na na 2 na)
                 (na na na 32 na)
@@ -358,18 +378,18 @@
   (cond [(or (empty? tG) (empty? (rest tG))) tG]
         [(cons? tG) (cons (push-row-up-top (first tG) (second tG))
                           (push-up-board/one (cons (push-row-up-bot (first tG) (second tG))
-                                                     (rest (rest tG)))))]))
+                                                   (rest (rest tG)))))]))
 
-#;(check-expect (push-up-board/one '((na na na 8 na)
-                                     (na na na 2 4)
-                                     (na na na 16 na)
-                                     (na na 2 na 4)
-                                     (na na na 16 8)))
-              (list (list 'na 'na 'na 8 'na)
-                    (list 'na 'na 'na 2 'na)
-                    (list 'na 'na 'na 'na 'na)
-                    (list 'na 'na 'na 'na 'na)
-                    (list 'na 'na 2 32 16)))
+(check-expect (push-up-board/one '((na na na 8 na)
+                                   (na na na 2 4)
+                                   (na na na 16 na)
+                                   (na na 2 na 4)
+                                   (na na na 16 8)))
+              '((na na na 8 4)
+                (na na na 2 na)
+                (na na 2 16 4)
+                (na na na 16 8)
+                (na na na na na)))
 
 ; push-row-up-top : [List-of Tile] [List-of Tile] -> [List-of Tile]
 ; Return the result of the top row after having pushed values into the top row
@@ -377,7 +397,8 @@
   (map (λ (tile-top tile-bot)
          (cond [(symbol? tile-bot) tile-top]
                [(symbol? tile-top) tile-bot]
-               [(and (number? tile-top) (number? tile-bot) (= tile-top tile-bot)) 'na]
+               [(and (number? tile-top) (number? tile-bot) (= tile-top tile-bot))
+                (+ tile-top tile-bot)]
                [(and (number? tile-top) (number? tile-bot)) tile-top]))
        top
        bot))
@@ -392,10 +413,8 @@
 ; Return the result of the bottom row after having pushed values into the top row
 (define (push-row-up-bot top bot)
   (map (λ (tile-top tile-bot)
-         (cond [(symbol? tile-top) tile-bot]
-               [(and (symbol? tile-bot) (number? tile-top)) tile-top]
-               [(and (number? tile-top) (number? tile-bot) (= tile-top tile-bot))
-                (+ tile-top tile-bot)]
+         (cond [(or (symbol? tile-top) (symbol? tile-bot)
+                    (and (number? tile-top) (number? tile-bot) (= tile-top tile-bot))) 'na]
                [(and (number? tile-top) (number? tile-bot)) tile-bot]))
        top
        bot))
@@ -405,8 +424,6 @@
 (check-expect (push-row-up-bot '(na na na na 4) '(na na na na na)) '(na na na na na))
 (check-expect (push-row-up-bot '(na na na na 4) '(na na na na 4)) '(na na na na na))
 (check-expect (push-row-up-bot '(na na na na 4) '(na na na na 8)) '(na na na na 8))
-
-;|#
 
 ; ------------------------------ Other Functions ------------------------------
 
@@ -444,7 +461,11 @@
   (and (not (win? tG))
        (number? 'a)))
 
-; no-empty-spaces? : tGame -> Boolean
+; board-full? : tGame -> Boolean
+; Are there no empty spaces in the board?
+(define (board-full? tG)
+  ...)
+
 
 ; tGame=? : tGame tGame -> Boolean
 ; Are the given tGames identical?
