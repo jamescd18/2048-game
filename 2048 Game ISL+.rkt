@@ -160,6 +160,7 @@
                 (na na na 8 8)
                 (na na na 16 na)
                 (na na na na na)))
+(check-expect (key tGame3 "right") tGame3)
 
 ; push-right-board : tGame -> tGame
 ; Pushes tiles all the way right as is possible
@@ -191,6 +192,7 @@
                 (na na na na na)
                 (na na na na na)
                 (na na na 64 16)))
+(check-expect (push-right-board tGame3) tGame3)
 
 ; push-left-board : tGame -> tGame
 ; Pushes tiles all the way left as is possible
@@ -213,15 +215,16 @@
                 (32 2 4 na na)
                 (32 16 8 na na)))
 (check-expect (push-left-board '((na na na na na)
-                                  (na na na na na)
-                                  (na na na na na)
-                                  (na na na na na)
-                                  (16 16 16 16 16)))
+                                 (na na na na na)
+                                 (na na na na na)
+                                 (na na na na na)
+                                 (16 16 16 16 16)))
               '((na na na na na)
                 (na na na na na)
                 (na na na na na)
                 (na na na na na)
                 (64 16 na na na)))
+(check-expect (push-left-board tGame3) tGame3)
 
 ; move-right : tGame -> tGame
 ; Move all tiles right if possible
@@ -244,6 +247,7 @@
                 (na na na 8 8)
                 (na na na 2 4)
                 (na na na 16 8)))
+(check-expect (move-right tGame3) tGame3)
 
 ; move-row-right : [List-of Tile] -> [List-of Tile]
 ; Slide tiles all the way to the right as is possible
@@ -277,6 +281,7 @@
                 (8 8 na na na)
                 (2 4 na na na)
                 (16 8 na na na)))
+(check-expect (move-left tGame3) tGame3)
 
 ; move-row-left : [List-of Tile] -> [List-of Tile]
 ; Slide tiles all the way to the left as is possible
@@ -307,6 +312,7 @@
                 (na na na 16 8)
                 (32 na 2 na 4)
                 (32 na na 16 8)))
+(check-expect (combo-right tGame3) tGame3)
 
 ; combo-row-right : [List-of Tile] -> [List-of Tile]
 ; Combine values next to each other that are the same going right
@@ -336,6 +342,13 @@
                 (na na na 16 na)
                 (na na 2 na 4)
                 (na na na 16 8)))
+(check-expect (combo-left tGame2)
+              '((4 na na 8 na)
+                (na 16 na 16 4)
+                (na na na 16 8)
+                (32 na 2 na 4)
+                (32 na na 16 8)))
+(check-expect (combo-left tGame3) tGame3)
 
 ; combo-row-left : [List-of Tile] -> [List-of Tile]
 ; Combine values next to each other that are the same going left
@@ -371,6 +384,19 @@
                 (na na na 8 na)
                 (na na na 2 na)
                 (na na 2 32 16)))
+(check-expect (push-down-board tGame1)
+              '((na na na na na)
+                (na na na 4 na)
+                (na na na 2 16)
+                (na na na 8 4)
+                (na na 2 16 8)))
+(check-expect (push-down-board tGame2)
+              '((na na na na na)
+                (na na na na na)
+                (na na na 4 16)
+                (4 na na 32 4)
+                (64 16 2 16 8)))
+(check-expect (push-down-board tGame3) tGame3)
 
 ; push-down-board/one : tGame -> tGame
 ; Pushes tiles down as is possible one pass down
@@ -390,6 +416,19 @@
                     (list 'na 'na 'na 'na 'na)
                     (list 'na 'na 'na 'na 'na)
                     (list 'na 'na 2 32 16)))
+(check-expect (push-down-board/one tGame1)
+              '((na na na 4 na)
+                (na na na 2 na)
+                (na na na na 16)
+                (na na na 8 4)
+                (na na 2 16 8)))
+(check-expect (push-down-board/one tGame2)
+              '((na na na 4 na)
+                (na na na na na)
+                (4 na na na 16)
+                (na na na 32 4)
+                (64 16 2 16 8)))
+(check-expect (push-down-board/one tGame3) tGame3)
 
 ; push-row-down-top : [List-of Tile] [List-of Tile] -> [List-of Tile]
 ; Return the result of the top row after having pushed values into the bottom row
@@ -443,6 +482,19 @@
                 (na na na 32 na)
                 (na na na na na)
                 (na na na na na)))
+(check-expect (push-up-board tGame1)
+              '((na na 2 4 16)
+                (na na na 2 4)
+                (na na na 8 8)
+                (na na na 16 na)
+                (na na na na na)))
+(check-expect (push-up-board tGame2)
+              '((4 16 2 4 16)
+                (64 na na 32 4)
+                (na na na 16 8)
+                (na na na na na)
+                (na na na na na)))
+(check-expect (push-up-board tGame3) tGame3)
 
 ; push-up-board/one : tGame -> tGame
 ; Pushes tiles up as is possible one pass up
@@ -462,6 +514,19 @@
                 (na na 2 16 4)
                 (na na na 16 8)
                 (na na na na na)))
+(check-expect (push-up-board/one tGame1)
+              '((na na na 4 8)
+                (na na na 2 8)
+                (na na 2 8 4)
+                (na na na 16 8)
+                (na na na na na)))
+(check-expect (push-up-board/one tGame2)
+              '((4 16 na 4 8)
+                (na na na 32 8)
+                (32 na 2 na 4)
+                (32 na na 16 8)
+                (na na na na na)))
+(check-expect (push-up-board/one tGame3) tGame3)
 
 ; push-row-up-top : [List-of Tile] [List-of Tile] -> [List-of Tile]
 ; Return the result of the top row after having pushed values into the top row
@@ -506,6 +571,7 @@
 
 (check-expect (game-over? tGame1) #f)
 (check-expect (game-over? tGame2) #f)
+(check-expect (game-over? tGame3) #t)
 
 ; win? : tGame -> Boolean
 ; Does the board contain at least one 2048 tile?
@@ -517,6 +583,7 @@
 
 (check-expect (win? tGame1) #f)
 (check-expect (win? tGame2) #f)
+(check-expect (win? tGame3) #f)
 (check-expect (win? '((4 na na 4 4)
                       (na 16 na 16 4)
                       (na na 2048 16 8)
@@ -576,6 +643,7 @@
 (check-expect (tGame=? tGame2 tGame2) #t)
 (check-expect (tGame=? tGame1 tGame2) #f)
 (check-expect (tGame=? tGame2 tGame1) #f)
+(check-expect (tGame=? tGame3 tGame1) #f)
 
 ; ----------------------------------- MAIN ------------------------------------
  
