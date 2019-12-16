@@ -26,6 +26,11 @@
                  (na na na 16 8)
                  (32 na 2 na 4)
                  (32 na na 16 8)))
+(define tGame3 '((2 4 8 16 32)
+                 (64 128 256 512 1024)
+                 (2 4 8 16 32)
+                 (64 128 256 512 4)
+                 (2 4 8 16 32)))
 
 ; Constants
 (define BG-COLOR "darkgrey")
@@ -236,10 +241,10 @@
                 (na na na 16 8)))
 (check-expect (combo-right tGame2)
               '((4 na na na 8)
-                 (na 16 na 16 4)
-                 (na na na 16 8)
-                 (32 na 2 na 4)
-                 (32 na na 16 8)))
+                (na 16 na 16 4)
+                (na na na 16 8)
+                (32 na 2 na 4)
+                (32 na na 16 8)))
 
 ; combo-row-right : [List-of Tile] -> [List-of Tile]
 ; Combine values next to each other that are the same going right
@@ -458,13 +463,35 @@
 ; - No key press operation will change the tGame
 ; - None of the tiles are 2048
 (define (loose? tG)
-  (and (not (win? tG))
-       (number? 'a)))
+  (and (board-full? tG)
+       (tGame=? tG (key tG "up"))
+       (tGame=? tG (key tG "down"))
+       (tGame=? tG (key tG "left"))
+       (tGame=? tG (key tG "right"))
+       (not (win? tG))))
+
+(check-expect (loose? tGame1) #f)
+(check-expect (loose? tGame2) #f)
+(check-expect (loose? tGame3) #t)
 
 ; board-full? : tGame -> Boolean
 ; Are there no empty spaces in the board?
 (define (board-full? tG)
-  ...)
+  (andmap (λ (row)
+            (andmap (λ (tile)
+                      (number? tile))
+                    row))
+          tG))
+
+(check-expect (board-full? tGame1) #f)
+(check-expect (board-full? tGame2) #f)
+(check-expect (board-full? tGame3) #t)
+(check-expect (board-full? '((4 4 4 4 4)
+                             (4 4 4 4 4)
+                             (4 4 4 4 4)
+                             (4 4 4 4 4)
+                             (4 4 4 4 4)))
+              #t)
 
 
 ; tGame=? : tGame tGame -> Boolean
@@ -493,3 +520,7 @@
     [to-draw draw]
     [on-key key]
     [stop-when game-over?]))
+
+; nice tests:
+; (main tGame1)
+; (main tGame2)
