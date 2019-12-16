@@ -344,10 +344,15 @@
         [(cons? row) (if (and (number? (first row)) (number? (second row))
                               (= (first row) (second row)))
                          (combo-row-left (cons (+ (first row) (second row))
-                                               (append (rest (rest row)) '(na))))
+                                               (cons 'na (rest (rest row)))))
                          (cons (first row) (combo-row-left (rest row))))]))
 
-#;(check-expect (combo-row-left ...) ...)
+(check-expect (combo-row-left '(na na na na na)) '(na na na na na))
+(check-expect (combo-row-left '(8 na na na 16)) '(8 na na na 16))
+(check-expect (combo-row-left '(na na na 4 4)) '(na na na 8 na))
+(check-expect (combo-row-left '(2 2 na 16 16)) '(4 na na 32 na))
+(check-expect (combo-row-left '(na na 16 16 16)) '(na na 32 na 16))
+(check-expect (combo-row-left '(na 16 16 16 16)) '(na 32 na 32 na))
 
 ; push-down-board : tGame -> tGame
 ; Pushes tiles all the way down as is possible
@@ -555,7 +560,6 @@
                              (4 4 4 4 4)))
               #t)
 
-
 ; tGame=? : tGame tGame -> Boolean
 ; Are the given tGames identical?
 (define (tGame=? tG1 tG2)
@@ -572,7 +576,6 @@
 (check-expect (tGame=? tGame2 tGame2) #t)
 (check-expect (tGame=? tGame1 tGame2) #f)
 (check-expect (tGame=? tGame2 tGame1) #f)
-          
 
 ; ----------------------------------- MAIN ------------------------------------
  
