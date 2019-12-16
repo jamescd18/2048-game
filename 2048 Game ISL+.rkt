@@ -129,8 +129,8 @@
 
 ; key : KeyEvent tGame -> tGame
 (define (key tG keyEvent)
-  (cond [(key=? keyEvent "right") (combo-right (move-right tG))]
-        [(key=? keyEvent "left") (combo-left (move-left tG))]
+  (cond [(key=? keyEvent "right") (push-right-board tG)]
+        [(key=? keyEvent "left") (push-left-board tG)]
         [(key=? keyEvent "down") (push-down-board tG)]
         [(key=? keyEvent "up") (push-up-board tG)]
         [else tG]))
@@ -160,6 +160,68 @@
                 (na na na 8 8)
                 (na na na 16 na)
                 (na na na na na)))
+
+; push-right-board : tGame -> tGame
+; Pushes tiles all the way right as is possible
+(define (push-right-board tG)
+  (local [(define next-board (combo-right (move-right tG)))]
+    (if (tGame=? tG next-board)
+        tG
+        (push-right-board next-board))))
+
+(check-expect (push-right-board tGame1)
+              '((na na na na 8)
+                (na na na 2 4)
+                (na na na na 16)
+                (na na na 2 4)
+                (na na na 16 8)))
+(check-expect (push-right-board tGame2)
+              '((na na na 8 4)
+                (na na na 32 4)
+                (na na na 16 8)
+                (na na 32 2 4)
+                (na na 32 16 8)))
+(check-expect (push-right-board '((na na na na na)
+                                  (na na na na na)
+                                  (na na na na na)
+                                  (na na na na na)
+                                  (16 16 16 16 16)))
+              '((na na na na na)
+                (na na na na na)
+                (na na na na na)
+                (na na na na na)
+                (na na na 64 16)))
+
+; push-left-board : tGame -> tGame
+; Pushes tiles all the way left as is possible
+(define (push-left-board tG)
+  (local [(define next-board (combo-left (move-left tG)))]
+    (if (tGame=? tG next-board)
+        tG
+        (push-left-board next-board))))
+
+(check-expect (push-left-board tGame1)
+              '((8 na na na na)
+                (2 4 na na na)
+                (16 na na na na)
+                (2 4 na na na)
+                (16 8 na na na)))
+(check-expect (push-left-board tGame2)
+              '((8 4 na na na)
+                (32 4 na na na)
+                (16 8 na na na)
+                (32 2 4 na na)
+                (32 16 8 na na)))
+(check-expect (push-left-board '((na na na na na)
+                                  (na na na na na)
+                                  (na na na na na)
+                                  (na na na na na)
+                                  (16 16 16 16 16)))
+              '((na na na na na)
+                (na na na na na)
+                (na na na na na)
+                (na na na na na)
+                (64 16 na na na)))
 
 ; move-right : tGame -> tGame
 ; Move all tiles right if possible
