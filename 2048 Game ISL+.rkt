@@ -562,6 +562,149 @@
 (check-expect (push-row-up-bot '(na na na na 4) '(na na na na 4)) '(na na na na na))
 (check-expect (push-row-up-bot '(na na na na 4) '(na na na na 8)) '(na na na na 8))
 
+; ----------------------------- New Tile Functions ----------------------------
+
+; add-new-tile : tGame -> tGame
+; Add a new number tile to a random empty tile in the board
+(define (add-new-tile tG)
+  (local [(define count-empty-tiles (- 25 (count-num-tiles tG)))]
+    (if (= count-empty-tiles 0)
+        tG
+        (insert-new-tile (random count-empty-tiles) (get-new-tile (random 2048)) tG))))
+
+(check-expect (count-num-tiles (add-new-tile tGame1)) 11)
+(check-expect (count-num-tiles (add-new-tile tGame2)) 15)
+(check-expect (count-num-tiles (add-new-tile tGame3)) 25)
+
+; insert-new-tile : Integer Tile [NEList-of [List-of Tile]] -> [NEList-of [List-of Tile]]
+; Insert the new tile into the correct row properly
+(define (insert-new-tile new-tile-index new-tile tGame)
+  (local [(define row-empty-tile-count (- 5 (count-num-tiles-row (first tGame))))]
+    (cond [(empty? (rest tGame)) (insert-new-tile-row new-tile-index new-tile (first tGame))]
+          [(> new-tile-index row-empty-tile-count)
+           (cons (first tGame) (insert-new-tile (- new-tile-index row-empty-tile-count) new-tile
+                                                (rest tGame)))]
+          [(<= new-tile-index row-empty-tile-count)
+           (cons (insert-new-tile-row new-tile-index new-tile (first tGame))
+                 (rest tGame))])))
+
+(check-expect (insert-new-tile 0 2 '((na na na 2 8)
+                                     (na na 4 na 8)
+                                     (8 na 2 16 na)))
+              '((2 na na 2 8)
+                (na na 4 na 8)
+                (8 na 2 16 na)))
+(check-expect (insert-new-tile 1 2 '((na na na 2 8)
+                                     (na na 4 na 8)
+                                     (8 na 2 16 na)))
+              '((na 2 na 2 8)
+                (na na 4 na 8)
+                (8 na 2 16 na)))
+(check-expect (insert-new-tile 5 2 '((na na na 2 8)
+                                     (na na 4 na 8)
+                                     (8 na 2 16 na)))
+              '((na na na 2 8)
+                (na na 4 2 8)
+                (8 na 2 16 na)))
+(check-expect (insert-new-tile 6 2 '((na na na 2 8)
+                                     (na na 4 na 8)
+                                     (8 na 2 16 na)))
+              '((na na na 2 8)
+                (na na 4 na 8)
+                (8 2 2 16 na)))
+(check-expect (insert-new-tile 7 2 '((na na na 2 8)
+                                     (na na 4 na 8)
+                                     (8 na 2 16 na)))
+              '((na na na 2 8)
+                (na na 4 na 8)
+                (8 na 2 16 2)))
+
+; insert-new-tile-row : Integer Tile [List-of Tile] -> [List-of Tile]
+; Insert the new tile into the correct spot in the list
+(define (insert-new-tile-row new-tile-index new-tile row)
+  (map (λ (tile index)
+         (if (= index new-tile-index)
+             new-tile
+             tile))
+       row
+       (build-empty-indecies 0 row)))
+
+(check-expect (insert-new-tile-row 0 2 '(na na na 4 8)) '(2 na na 4 8))
+(check-expect (insert-new-tile-row 1 4 '(na na na 4 8)) '(na 4 na 4 8))
+(check-expect (insert-new-tile-row 2 8 '(na na na 4 8)) '(na na 8 4 8))
+
+; build-empty-indecies : Integer [List-of Tile] -> [List-of [Maybe Integer]]
+; Convert a list of tiles into indexed 'na s and #f for numbers
+(define (build-empty-indecies na-so-far row)
+  (cond [(empty? row) row]
+        [(cons? row) (if (symbol? (first row))
+                         (cons na-so-far (build-empty-indecies (add1 na-so-far) (rest row)))
+                         (cons #f (build-empty-indecies na-so-far (rest row))))]))
+
+(check-expect (build-empty-indecies 0 '(na na na na na)) '(0 1 2 3 4))
+(check-expect (build-empty-indecies 0 '(na 2 na na na)) '(0 #f 1 2 3))
+(check-expect (build-empty-indecies 0 '(na na na 4 8)) '(0 1 2 #f #f))
+(check-expect (build-empty-indecies 0 '(16 na 32 na 1024)) '(#f 0 #f 1 #f))
+(check-expect (build-empty-indecies 0 '(16 na 32 2 1024)) '(#f 0 #f #f #f))
+(check-expect (build-empty-indecies 0 '(16 32 64 128 256)) '(#f #f #f #f #f))
+
+; get-new-tile : Integer -> Number
+; Returns a new numer to be a tile based on the random number given
+(define (get-new-tile rand-num)
+    (cond [(= rand-num 2047) 2048] ; 1
+          [(<= 2045 rand-num 2047) 1024] ; 2
+          [(<= 2041 rand-num 2045) 512] ; 4
+          [(<= 2033 rand-num 2041) 256] ; 8
+          [(<= 2017 rand-num 2033) 128] ; 16
+          [(<= 1985 rand-num 2017) 64] ; 32
+          [(<= 1921 rand-num 1985) 32] ; 64
+          [(<= 1793 rand-num 1921) 16] ; 128
+          [(<= 1537 rand-num 1793) 8] ; 256
+          [(<= 1025 rand-num 1537) 4] ; 512
+          [(<= 0 rand-num 1025) 2])) ; 1024
+
+(check-expect (number? (get-new-tile (random 2048))) #t)
+(check-expect (integer? (log (get-new-tile (random 2048)) 2)) #t)
+(check-expect (get-new-tile 2047) 2048)
+(check-expect (get-new-tile 2046) 1024)
+(check-expect (get-new-tile 2044) 512)
+(check-expect (get-new-tile 2035) 256)
+(check-expect (get-new-tile 2020) 128)
+(check-expect (get-new-tile 2000) 64)
+(check-expect (get-new-tile 1950) 32)
+(check-expect (get-new-tile 1800) 16)
+(check-expect (get-new-tile 1600) 8)
+(check-expect (get-new-tile 1200) 4)
+(check-expect (get-new-tile 500) 2)
+
+; count-num-tiles : tGame -> Natural
+; Count the number of non-empty tiles on the board
+(define (count-num-tiles tG)
+  (foldr (λ (row tot-so-far) (+ (count-num-tiles-row row) tot-so-far))
+         0
+         tG))
+
+(check-expect (count-num-tiles tGame1) 10)
+(check-expect (count-num-tiles tGame2) 14)
+(check-expect (count-num-tiles tGame3) 25)
+
+; count-num-tiles-row : [List-of Tile] -> Natural
+; Count the number of non-empty tiles in a list
+(define (count-num-tiles-row row)
+  (foldr (λ (tile tot-row-so-far)
+           (if (number? tile)
+               (add1 tot-row-so-far)
+               tot-row-so-far))
+         0
+         row))
+
+(check-expect (count-num-tiles-row '(na na na na na)) 0)
+(check-expect (count-num-tiles-row '(na na na 8 na)) 1)
+(check-expect (count-num-tiles-row '(4 na na na 2)) 2)
+(check-expect (count-num-tiles-row '(8 4 na na 16)) 3)
+(check-expect (count-num-tiles-row '(128 256 64 512 na)) 4)
+(check-expect (count-num-tiles-row '(2 4 8 16 32)) 5)
+
 ; ------------------------------ Other Functions ------------------------------
 
 ; game-over? : tGame -> Boolean
