@@ -580,11 +580,11 @@
 ; Insert the new tile into the correct row properly
 (define (insert-new-tile new-tile-index new-tile tGame)
   (local [(define row-empty-tile-count (- 5 (count-num-tiles-row (first tGame))))]
-    (cond [(empty? (rest tGame)) (insert-new-tile-row new-tile-index new-tile (first tGame))]
-          [(> new-tile-index row-empty-tile-count)
+    (cond [(empty? (rest tGame)) (list (insert-new-tile-row new-tile-index new-tile (first tGame)))]
+          [(>= new-tile-index row-empty-tile-count)
            (cons (first tGame) (insert-new-tile (- new-tile-index row-empty-tile-count) new-tile
                                                 (rest tGame)))]
-          [(<= new-tile-index row-empty-tile-count)
+          [(< new-tile-index row-empty-tile-count)
            (cons (insert-new-tile-row new-tile-index new-tile (first tGame))
                  (rest tGame))])))
 
@@ -623,7 +623,7 @@
 ; Insert the new tile into the correct spot in the list
 (define (insert-new-tile-row new-tile-index new-tile row)
   (map (λ (tile index)
-         (if (= index new-tile-index)
+         (if (and (number? index) (= index new-tile-index))
              new-tile
              tile))
        row
@@ -648,7 +648,7 @@
 (check-expect (build-empty-indecies 0 '(16 na 32 2 1024)) '(#f 0 #f #f #f))
 (check-expect (build-empty-indecies 0 '(16 32 64 128 256)) '(#f #f #f #f #f))
 
-; get-new-tile : Integer -> Number
+; get-new-tile : Integer -> Integer
 ; Returns a new numer to be a tile based on the random number given
 (define (get-new-tile rand-num)
     (cond [(= rand-num 2047) 2048] ; 1
@@ -687,6 +687,7 @@
 (check-expect (count-num-tiles tGame1) 10)
 (check-expect (count-num-tiles tGame2) 14)
 (check-expect (count-num-tiles tGame3) 25)
+
 
 ; count-num-tiles-row : [List-of Tile] -> Natural
 ; Count the number of non-empty tiles in a list
@@ -794,7 +795,7 @@
 (define (main starter-board)
   (big-bang starter-board
     [to-draw draw]
-    [on-key key]
+    [on-key (compose add-new-tile key)]
     [stop-when game-over?]))
 
 ; nice tests:
