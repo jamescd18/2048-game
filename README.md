@@ -7,3 +7,4 @@ After consulting someone that knows the game better and has played it siginifica
 Of note about my version:
 - One key press operation will collapse numbers until the can no longer be collapsed further
 - The game board is 5 by 5 rather than the original 4 by 4
+- When a new tile is added with each key press, the new tile is randomly generated with a 1 out of 2048 chance of being a 2048, and doubling probabilities as the number is halved. (The new tile can be any valid number from 2048 to 2, but smaller numbers are more common)
