@@ -33,12 +33,13 @@
                  (2 4 8 16 32)))
 
 ; Constants
+(define SCALE 1)
 (define BG-COLOR "darkgrey")
 (define TILE-COLOR "orange")
 (define NUM-COLOR "white")
-(define BG-SIZE 250)
-(define TILE-SIZE 40)
-(define NUM-SIZE 14)
+(define BG-SIZE (* SCALE 250))
+(define TILE-SIZE (* SCALE 40))
+(define NUM-SIZE (* SCALE 14))
 (define BLANK-TILE (square TILE-SIZE "solid" "lightgrey"))
 
 (define (p x y) (make-posn x y)) ; Simplifier shortcut
